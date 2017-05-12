@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		8F7035CD1EAA2DD900B74296 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F7035CC1EAA2DD900B74296 /* main.swift */; };
+		8FCAEC081EB22934007C5146 /* Nodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FCAEC071EB22934007C5146 /* Nodes.swift */; };
+		8FCAEC0A1EB23808007C5146 /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FCAEC091EB23808007C5146 /* Parser.swift */; };
+		8FE42CBD1EB9EDB500A9DB06 /* EitherNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE42CBC1EB9EDB500A9DB06 /* EitherNode.swift */; };
 		8FE72B961EB0C13A00C82976 /* Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE72B951EB0C13A00C82976 /* Tokens.swift */; };
 		8FE72B981EB0C1DF00C82976 /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE72B971EB0C1DF00C82976 /* Tokenizer.swift */; };
 		8FE72B9A1EB0C38600C82976 /* ConsoleIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE72B991EB0C38600C82976 /* ConsoleIO.swift */; };
@@ -28,6 +31,9 @@
 /* Begin PBXFileReference section */
 		8F7035C91EAA2DD900B74296 /* ComputorV2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ComputorV2; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F7035CC1EAA2DD900B74296 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		8FCAEC071EB22934007C5146 /* Nodes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Nodes.swift; sourceTree = "<group>"; };
+		8FCAEC091EB23808007C5146 /* Parser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
+		8FE42CBC1EB9EDB500A9DB06 /* EitherNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EitherNode.swift; sourceTree = "<group>"; };
 		8FE72B951EB0C13A00C82976 /* Tokens.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tokens.swift; sourceTree = "<group>"; };
 		8FE72B971EB0C1DF00C82976 /* Tokenizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tokenizer.swift; sourceTree = "<group>"; };
 		8FE72B991EB0C38600C82976 /* ConsoleIO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConsoleIO.swift; sourceTree = "<group>"; };
@@ -67,6 +73,9 @@
 				8FE72B951EB0C13A00C82976 /* Tokens.swift */,
 				8FE72B991EB0C38600C82976 /* ConsoleIO.swift */,
 				8FE72B971EB0C1DF00C82976 /* Tokenizer.swift */,
+				8FCAEC071EB22934007C5146 /* Nodes.swift */,
+				8FCAEC091EB23808007C5146 /* Parser.swift */,
+				8FE42CBC1EB9EDB500A9DB06 /* EitherNode.swift */,
 			);
 			path = ComputorV2;
 			sourceTree = "<group>";
@@ -129,8 +138,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8FCAEC081EB22934007C5146 /* Nodes.swift in Sources */,
 				8F7035CD1EAA2DD900B74296 /* main.swift in Sources */,
+				8FCAEC0A1EB23808007C5146 /* Parser.swift in Sources */,
 				8FE72B9A1EB0C38600C82976 /* ConsoleIO.swift in Sources */,
+				8FE42CBD1EB9EDB500A9DB06 /* EitherNode.swift in Sources */,
 				8FE72B981EB0C1DF00C82976 /* Tokenizer.swift in Sources */,
 				8FE72B961EB0C13A00C82976 /* Tokens.swift in Sources */,
 			);
