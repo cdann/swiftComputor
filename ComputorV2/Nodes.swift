@@ -64,14 +64,15 @@ struct OperationNode : ExprNode {
     let lhs : ExprNode
     let rhs : ExprNode
     var description: String {
-        return "ope \(lhs) \(ope) \(rhs)"
+        return "Ope [\(lhs) \(ope) \(rhs)]"
     }
 }
 
 struct LineNode : Node {
     let lhs : ExprNode
-    let rhs : ExprNode?
+    let rhs : ExprNode
     var description: String {
         return "Line \(lhs) = \(rhs)"
     }
 }
+
