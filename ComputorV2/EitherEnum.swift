@@ -13,16 +13,14 @@ enum Either<T>{
     case Success(T)
 }
 
-precedencegroup NodeOperatorPrecedence {
+precedencegroup EitherOperatorPrecedence {
     associativity: left
 }
-//precedencegroup NodeOperatorPrecedence {
-//    associativity: left
-//}
+
 //infix operator &> : NodeOperatorPrecedence
-infix operator <|> : NodeOperatorPrecedence
-infix operator <+> : NodeOperatorPrecedence
-infix operator >>- : NodeOperatorPrecedence
+infix operator <|> : EitherOperatorPrecedence
+infix operator <+> : EitherOperatorPrecedence
+infix operator >>- : EitherOperatorPrecedence
 /*
 
 func &> <T>(value: Option<T>, fc: ((T) -> Option<T>)) -> Option<T>{
@@ -35,6 +33,7 @@ func &> <T>(value: Option<T>, fc: ((T) -> Option<T>)) -> Option<T>{
 */
 
 
+// If first value is a success, return the first, else return the second value
 func <|> <T>(value: Either<T>, val2: Either<T>) -> Either<T>{
     if case .Fail = value , case .Success = val2 {
         return val2
@@ -43,6 +42,7 @@ func <|> <T>(value: Either<T>, val2: Either<T>) -> Either<T>{
     }
 }
 
+//If one of the values is false returns false, else return the second value
 func <+> <T, Q>(value: Either<T>, val2: Either<Q>) -> Either<Q>{
     if case let .Fail(s) = value{
         return .Fail(s)
@@ -51,14 +51,29 @@ func <+> <T, Q>(value: Either<T>, val2: Either<Q>) -> Either<Q>{
     }
 }
 
+// Convert val into the type Q to return a Success in the type Q
 func >>- <T, Q>(val: Either<T>, type:Q.Type) -> Either<Q>
 {
   switch val {
   case let .Success(v):
-      return .Success(v as! Q)
+    if let c = v as? Q {
+        return .Success(c)
+    }
+    else {
+        return .Fail("cannot convert \(v) in \(Q.self)")
+    }
   case let .Fail(e):
       return .Fail(e)
   }
 }
 
 
+/*func getEitherError <T>(e:Either<T>) -> String
+{
+    switch e {
+    case let .Fail(err):
+        return err
+    default:
+        return ("getEitherError unreachable code")
+    }
+}*/
