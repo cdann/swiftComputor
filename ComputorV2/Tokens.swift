@@ -63,14 +63,14 @@ typealias TokenGenerator = (String) -> Token?
 let tokenList: [(String, TokenGenerator)] = [
     ("^[ \t\n]", { _ in nil }),
     ("^[a-zA-Z][a-zA-Z0-9]*", {$0 == "i" ? .I : .Identifier($0) }),
-    ("^[+|-]*[0-9]+(.[0-9]+)?", { (r: String) in .Number((r as NSString).floatValue) }),
+    ("^[0-9]+(\\.[0-9]+)?", { (r: String) in .Number((r as NSString).floatValue) }),
     ("^[+\\*/\\-%\\^]|\\*\\*", {.Operator($0)}),
     ("^\\(", { _ in .LParenth }),
     ("^\\)", { _ in .RParenth }),
     ("^\\[", { _ in .LBracket }),
     ("^\\]", { _ in .RBracket }),
     ("^,", { _ in .Comma }),
-    ("^?", { _ in .Intero }),
+    ("^\\?", { _ in .Intero }),
     ("^;", { _ in .SemiColon }),
     ("^=", { _ in .Equal }),
 ]

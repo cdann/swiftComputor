@@ -1,4 +1,4 @@
-//
+  //
 //  main.swift
 //  ComputorV2
 //
@@ -16,10 +16,15 @@ while (!shouldQuit) {
     if (line == "q"){
         shouldQuit = true
     }
-    else {
-        let tokens = tokenize(input: line)
-        print (tokens)
+    else if (line != ""){
+        let tokenizer = Tokenizer(input: line)
+        tokenizer.debugTokens()
+        let parser = Parser(tkn:tokenizer)
+        let tree = parser.parseLine()
+        /*print (parse)*/
     }
     
 }
+  
+
 

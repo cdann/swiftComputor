@@ -12,51 +12,6 @@ enum ParseError : Error {
     case UnexpectedToken(unexpected: Token)
 }
 
-class Tokenizer {
-    var index = 0
-    let tokens : [Token]
-    
-    init(ts:[Token]) {
-        tokens = ts
-    }
-    
-    func end() -> Bool {
-        print ("\(tokens.count)   vs  \(self.index)")
-        if (tokens.count < self.index) {
-            return false
-        }
-        return true
-    }
-    
-    func consume(len:Int = 1) -> Token? {
-        if self.end() {
-            return nil
-        }
-        let current = index
-        self.index = self.index + len
-        return tokens[current]
-    }
-    
-    func expect(search:Token) -> Either<Bool> {
-        let current = self.consume()
-        guard current != nil , search == current else{
-            return .Fail("Unexpected Token \(current) while we expect a \(search)")
-        }
-        return .Success(true)
-    }
-    
-    func adjustIndexAndReturn<T>(startIndex:Int, ret:Either<T>) -> Either<T> {
-        switch ret{
-            case .Fail:
-                self.index = startIndex
-                return ret
-            case .Success:
-                return ret
-        }
-    }
-    
-}
-
 let precedenceTab: [String : Int] = [
     "+" : 20,
     "-" : 20,
@@ -64,103 +19,7 @@ let precedenceTab: [String : Int] = [
     "/" : 30,
 ]
 
-
-
-
-
-func parseLine(line:[Token]) -> Either<LineNode> {
-    let tk = Tokenizer(ts:line)
-    let  tmp  = parseAssignation(tk:tk)
-    print("## \(tmp)")
-    return tmp <|> parseComputation(tk:tk)
-}
-
-func parseAssignation(tk:Tokenizer) -> Either<LineNode> {
-    // funA(x) = 2*x+1
-    /*let (len,lhs) =
-    tk.consume(len)
-    tk.expect(search: Token.Equal)
-    let rhs = parseOperation(tk:tk)
-    
-    return (LineNode(lhs:lhs, rhs:rhs))*/
-    let startIndex = tk.index
-    let lexpr : Either<ExprNode> = (parseFun(tk:tk) >>- ExprNode.self) <|> (parseVariable(tk:tk) >>- ExprNode.self)
-    print("%% \(lexpr)")
-    var ret : Either<LineNode>
-    switch lexpr {
-    case let .Fail(err):
-        ret = Either.Fail(err)
-    case let .Success(node):
-        if (!tk.end()) {
-            ret = .Fail ("Unexpected token \( tk.consume) at the end of the line")
-        } else {
-            ret = .Success(LineNode(lhs: node, rhs:nil))
-        }
-    }
-    return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
-}
-
-func parseComputation(tk:Tokenizer) -> Either<LineNode> {
-    return .Success(LineNode(lhs: NumberNode(val:23.5), rhs:nil))
-}
-
-func parseIdentifier(tk:Tokenizer) -> Either<String> {
-    let r : Token? = tk.consume()
-    var ret : Either<String>
-    if let id = r, case let Token.Identifier(st) = id {
-        ret = .Success(st)
-    }
-    else if r == nil {
-        ret = .Fail("an Identifier is missing")
-    }
-    else {
-        ret = .Fail("Unexpected Token \(r!) while we expect an Identifier")
-    }
-    return tk.adjustIndexAndReturn(startIndex: tk.index - 1, ret: ret)
-}
-
-func parseFun(tk:Tokenizer)  -> Either<FuncNode> {
-    var ret : Either<FuncNode>
-    let startIndex = tk.index
-    
-    let id = parseIdentifier(tk: tk)
-    let variable = tk.expect(search: Token.LParenth) <+> parseVariable(tk: tk)
-    let parenth = tk.expect(search: Token.RParenth)
-    if case let .Success(st) = id , case let .Success(v) = variable, case .Success(true) = parenth{
-        ret = .Success(FuncNode(name:st, variable: v))
-    }
-    else if case let .Fail(e) = (id <+> variable){
-            ret = .Fail(e)
-    }
-    else {
-            ret = .Fail("Unreachable")
-    }
-    return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
-}
-
-
-
-
-func parseVariable(tk:Tokenizer) -> Either<VarNode> {
-    var ret : Either<VarNode>
-    let startIndex = tk.index
-    
-    let id = parseIdentifier(tk: tk)
-    switch id {
-    case let .Success(node):
-        ret = .Success(VarNode(name: node))
-    case let .Fail(str):
-        ret = .Fail(str)
-    }
-    return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
-}
-
 /*
- func parseValue(tk:Tokenizer) -> Either<ValueNode> {
- let ret = parseComplex(tk:tk) <|> parseNumber(tk:tk) <|> parseVariable(tk:tk) <|> parseFun(tk:tk) // <|> parseMatrice
- return ret
- }
-
 func parseComplex(tk:Tokenizer) -> Either<ComplexNode> {
     let nbNode = parseNumber(tk: tk)
     let i = tk.expect(search: Token.I)
@@ -174,15 +33,6 @@ func parseComplex(tk:Tokenizer) -> Either<ComplexNode> {
     case let (.Fail(e), .Fail(_)):
         return .Fail(e)
     }
-    
-}
-
-func parseNumber(tk:Tokenizer) -> Either<NumberNode> {
-    let r = tk.consume()
-    guard case let .Number(n) = r else {
-        return .Fail("Unexpected Token \(r) while we expect a Number")
-    }
-    return .Success(NumberNode(val: n))
 }
 
 func parseParenth(tk:Tokenizer) -> Either<ValueNode> {
@@ -206,55 +56,228 @@ func parseOperation(tk:Tokenizer) throws -> Either<OperationNode> {
 */
 
 
-/*
- class Parser {
- let tk : Tokensbrowser
- init(tks: Tokensbrowser) {
- tk = tks
+
+class Parser {
+    let tk : Tokenizer
+    
+    init(tkn: Tokenizer) {
+        tk = tkn
+    }
+    
+    
+    func parseLine() -> Either<LineNode> {
+        let  tmp  = parseAssignation()
+        print("## \(tmp)")
+        return tmp <|> parseComputation()
+    }
+    
+    func parseAssignation() -> Either<LineNode> {
+        // funA(x) = 2*x+1
+        
+        /*
+         let (len,lhs) =
+         tk.consume(len)
+         tk.expect(search: Token.Equal)
+         let rhs = parseOperation(tk:tk)
+         return (LineNode(lhs:lhs, rhs:rhs))
+         */
+        
+        let startIndex = tk.index
+        //lftexpr is either a func either a var in both case we cast the node in ExprNode
+        let lftExpr : Either<ExprNode> = (parseFun(justIdentifier: true) >>- ExprNode.self) <|> (parseVariable() >>- ExprNode.self)
+        if case let .Fail(err) = lftExpr {
+            return tk.adjustIndexAndReturn(startIndex: startIndex, ret: .Fail(err))
+        }
+        let rghtExpr : Either<ExprNode> = tk.expect(search: .Equal) <+> ((parseOperation() >>- ExprNode.self)) <|> (parseValue() >>- ExprNode.self)
+        print("%% \(rghtExpr) ")
+        var ret : Either<LineNode>
+        switch (lftExpr, rghtExpr) {
+        case let (.Success(l), .Success(r)):
+            if (!tk.end()) {
+                print("Success \(l) \(r)")
+                ret = .Fail ("Unexpected token \( tk.consume() ?? .Other("nil")) at the end of the line")
+            } else {
+                ret = .Success(LineNode(lhs: l, rhs:r))
+            }
+        case let (_, .Fail(err)):
+            ret = Either.Fail(err)
+        default:
+            ret = .Fail("Unreachable")
+        }
+        return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
+    }
+    
+    
+    func parseComputation() -> Either<LineNode> {
+        return .Success(LineNode(lhs: NumberNode(val:23.5), rhs: VarNode(name:"bla")))
+    }
+    
+    func parseFun(justIdentifier:Bool = false)  -> Either<FuncNode> {
+        //    print("yop")
+        var ret : Either<FuncNode>
+        let startIndex = tk.index
+        
+        let id = parseIdentifier()
+        let checkVar = justIdentifier ? {() -> Either<ValueNode> in self.parseVariable() >>- ValueNode.self} : parseValue
+        let variable = tk.expect(search: Token.LParenth) <+> checkVar()
+        let parenth = tk.expect(search: Token.RParenth)
+        if case let .Success(st) = id , case let .Success(v) = variable, case .Success(true) = parenth{
+            ret = .Success(FuncNode(name:st, variable: v))
+        }
+        else if case let .Fail(e) = (id <+> variable){
+            ret = .Fail(e)
+        }
+        else {
+            ret = .Fail("Unreachable")
+        }
+        return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
+    }
+    
+    func parseVariable() -> Either<VarNode> {
+        var ret : Either<VarNode>
+        let startIndex = tk.index
+        
+        let id = parseIdentifier()
+        switch id {
+        case let .Success(node):
+            ret = .Success(VarNode(name: node))
+        case let .Fail(str):
+            ret = .Fail(str)
+        }
+        return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
+    }
+    
+    func parseIdentifier() -> Either<String> {
+        
+        let r : Token? = tk.consume()
+        var ret : Either<String>
+        if let id = r, case let Token.Identifier(st) = id {
+            ret = .Success(st)
+            //print(ret)
+        }
+        else if r == nil {
+            ret = .Fail("an Identifier is missing")
+        }
+        else {
+            ret = .Fail("Unexpected Token \(r!) while we expect an Identifier")
+        }
+        return tk.adjustIndexAndReturn(startIndex: tk.index - 1, ret: ret)
+    }
+    
+    func parseNumber() -> Either<NumberNode> {
+        let startIndex = tk.index
+        let r = tk.consume()
+        guard let nb = r, case let .Number(n) = nb else {
+            let ret : Either<NumberNode> = .Fail("Unexpected Token \(r ?? .Other("nil")) while we expect a Number")
+            return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
+        }
+        return .Success(NumberNode(val: n))
+    }
+    
+    /*
+     6 + 5 * 2 + 9 / 3
+     
+     prev : 6 +
+     + vs * = * donc current_ope avant prev
+        prev = 5 *
+        * vs + = * donc prev
+            prev (5 * 2) +
+            + vs / = / donc current ope avant prev
+            -> (9 / 3)
+        -> (5 * 2) + (9 / 3)
+     -> 6 + (5 * 2) + (9 / 3)
+     
+     cas 1 : prevOp >= currOp 3 * 4 + 6 >>>>> left = noeud prevExpr prevOp et currExpr. retourne parseFollowingOperation( left, currOp)
+     cas 2 : prevOp < currOp 5 + 6 * 7>>>>> right = parseFollowingOperation (currExpr, currOp) retourne noeud prevExpr prevOp right
+     let precedenceTab: [String : Int] = [
+     "+" : 20,
+     "-" : 20,
+     "*" : 30,
+     "/" : 30,
+     ]
+     */
+    
+    func parseOperation(prevExpr:ExprNode? = nil , prevOp: String? = nil) -> Either<OperationNode> {
+        let startIndex = tk.index
+        let currExpr = (parseValue() >>- ExprNode.self)
+        guard case let .Success(curr) = currExpr else {
+          return tk.adjustIndexAndReturn(startIndex: startIndex, ret: currExpr >>- OperationNode.self)
+        }
+        if tk.end() && prevOp != nil {
+ let lastNode = OperationNode(ope: prevOp!, lhs: prevExpr!, rhs: curr)
+ return tk.adjustIndexAndReturn(startIndex: startIndex, ret: .Success(lastNode))
+           /* print("~~~~ \(String(describing: prevExpr)) \(String(describing: prevOp))")
+            return .Success(prevExpr) >>- OperationNode.self*/
+        }
+        let tkop = tk.consume()
+        guard let ope = tkop, case let .Operator(op) = ope else {
+            return tk.adjustIndexAndReturn(startIndex: startIndex, ret: Either<OperationNode>.Fail("Unexpected Token \(tkop ?? .Other("nil")) while we expect an Operator \(tk.index)"))
+        }
+        var ret : Either<OperationNode>
+        guard let prevE = prevExpr, let prevO = prevOp else {                   // premier passage
+            let nextExpr =  (parseOperation(prevExpr: curr, prevOp: op) >>- ExprNode.self) <|> (parseValue() >>- ExprNode.self)
+            switch  nextExpr {
+            case let .Success(nxt):
+                ret = .Success(nxt as! OperationNode)
+            case let .Fail(err):
+                ret = .Fail(err)
+            }
+            return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
+        }
+        if (precedenceTab[prevO]! >= precedenceTab[op]!) {     //priorite a droite
+            let lNode = OperationNode(ope: prevO, lhs: prevE, rhs: curr)
+            ret = parseOperation(prevExpr: lNode , prevOp: op)
+        
+        } else {                                               //priorite a gauche
+            let rNode = parseOperation(prevExpr: curr, prevOp: op)
+            switch rNode{
+            case let .Success(r):
+                ret = .Success(OperationNode(ope: prevO, lhs: prevE, rhs: r))
+            case let .Fail(err):
+                ret = .Fail(err)
+            }
+            
+        }
+        
+        return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
+    }
+    
+    /*func parseOperation() -> Either<OperationNode> {
+        print("$$$$$$start parse ope \(tk.index)")
+        let startIndex = tk.index
+        let lftExpr = (parseValue() >>- ExprNode.self) /*<|> (parseOperation(tk: tk) >>- ExprNode.self)*/
+        guard case let .Success(l) = lftExpr else {
+            return tk.adjustIndexAndReturn(startIndex: startIndex, ret: lftExpr >>- OperationNode.self)
+        }
+        let tkop = tk.consume()
+        guard let ope = tkop, case let .Operator(op) = ope else {
+            return tk.adjustIndexAndReturn(startIndex: startIndex, ret: Either<OperationNode>.Fail("Unexpected Token \(tkop) while we expect an Operator"))
+        }
+        let rghExpr =  (parseFollowingOperation(prevExpr: l, prevOp: op) >>- ExprNode.self) <|>  (parseValue() >>- ExprNode.self)
+        var ret : Either<OperationNode>
+        switch  rghExpr {
+        case let .Success(r):
+            ret = .Success(OperationNode(ope:op, lhs:l, rhs:r))
+        case let .Fail(err):
+            ret = .Fail(err)
+        }
+        return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
+    }*/
+    
+    
+    func parseValue() -> Either<ValueNode> {
+        let startIndex = tk.index
+        //print("val id:\(tk.index) tk:")
+        
+        let ret = /*parseComplex(tk:tk) <|>*/ (parseNumber() >>- ValueNode.self) <|> (parseVariable() >>- ValueNode.self) //<|> (parseFun(tk:tk) >>- ValueNode.self) // <|> parseMatrice\
+        
+        return tk.adjustIndexAndReturn(startIndex: startIndex, ret: ret)
+    }
+
+    
+    
+ 
+ 
  }
  
- func parseOperation() -> OperationNode {
- let lhs = parsePrimary()
- // ++
- 
- if case let .Operator(op) = tk.consumeToken() {
- let precedence = precedenceTab[op]
- }
- 
- 
- 
- }
- 
- func parsePrimary() -> ExprNode? {
- if let ret = parseComplex() as? ExprNode{
- return ret
- }
- else {
- return parseNumber() as? ExprNode
- }
- }
- 
- 
- func parseNumber() -> NumberNode? {
- if case let .Number(a) = tk.consumeToken() {
- return NumberNode(val: a)
- }
- return nil
- }
- 
- func parseComplex() -> ComplexNode?{
- let ret = parseNumber()?.val ?? 1.0
- if case .I = tk.consumeToken() {
- return ComplexNode (factor: ret)
- }
- return nil
- }
- 
- /*func parseMatrice() -> [[Float]]? {
- 
- return nil
- }*/
- }
- 
- */
 
